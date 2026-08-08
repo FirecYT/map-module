@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Map Module — Interactive Demo</title>
+  <style>
+    :root {
+      --bg: #111214;
+      --panel: #1c1e22;
+      --panel-2: #24272c;
+      --border: #2e3238;
+      --text: #e6e6e6;
+      --text-dim: #8a8f98;
+      --accent: #4ade80;
+      --accent-2: #60a5fa;
+      --danger: #f87171;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    #app {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      grid-template-rows: 1fr;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #canvas-container {
+      position: relative;
+      overflow: hidden;
+      background: #0a0b0d;
+    }
+
+    #game-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+      image-rendering: pixelated;
+    }
+
+    #minimap-container {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 4px;
+      pointer-events: none;
+    }
+
+    #minimap-canvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    #hud {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      pointer-events: none;
+      min-width: 240px;
+    }
+
+    #hud .label {
+      color: var(--text-dim);
+      display: inline-block;
+      width: 90px;
+    }
+
+    #hud .value {
+      color: var(--accent);
+    }
+
+    #hud .value.dim { color: var(--text-dim); }
+    #hud .value.blue { color: var(--accent-2); }
+
+    #controls-hint {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.7;
+      pointer-events: none;
+      color: var(--text-dim);
+    }
+
+    #controls-hint kbd {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 10px;
+      color: var(--text);
+      font-family: inherit;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    #sidebar h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      color: var(--accent);
+    }
+
+    #sidebar h2 {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      margin: 0 0 10px 0;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #sidebar .section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #sidebar label {
+      font-size: 12px;
+      color: var(--text-dim);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    #sidebar input[type="number"],
+    #sidebar input[type="text"],
+    #sidebar select {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    #sidebar input:focus,
+    #sidebar select:focus {
+      border-color: var(--accent);
+    }
+
+    #sidebar input[type="range"] {
+      accent-color: var(--accent);
+    }
+
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .range-row input[type="range"] {
+      flex: 1;
+    }
+
+    .range-row .range-value {
+      font-size: 12px;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      color: var(--accent);
+      min-width: 36px;
+      text-align: right;
+    }
+
+    .btn {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .btn:hover {
+      background: var(--border);
+      border-color: var(--accent);
+    }
+
+    .btn-accent {
+      background: rgba(74, 222, 128, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-accent:hover {
+      background: rgba(74, 222, 128, 0.25);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-row .btn { flex: 1; }
+
+    .tile-picker {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .tile-picker button {
+      aspect-ratio: 1;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.15s;
+    }
+
+    .tile-picker button:hover {
+      border-color: var(--text-dim);
+    }
+
+    .tile-picker button.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+    }
+
+    .tile-picker button .tile-name {
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 8px;
+      color: var(--text);
+      text-shadow: 0 0 3px black;
+    }
+
+    #event-log {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 11px;
+      height: 140px;
+      overflow-y: auto;
+      color: var(--text-dim);
+    }
+
+    #event-log .log-entry {
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    #event-log .log-entry .time {
+      color: var(--accent-2);
+    }
+
+    #event-log .log-entry .msg {
+      color: var(--text-dim);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 12px;
+      font-size: 12px;
+    }
+
+    .stats-grid .stat-label {
+      color: var(--text-dim);
+    }
+
+    .stats-grid .stat-value {
+      color: var(--accent);
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      text-align: right;
+    }
+
+    .separator {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="canvas-container">
+      <canvas id="game-canvas"></canvas>
+
+      <div id="minimap-container">
+        <canvas id="minimap-canvas" width="160" height="160"></canvas>
+      </div>
+
+      <div id="hud">
+        <div><span class="label">FPS:</span> <span class="value" id="hud-fps">0</span></div>
+        <div><span class="label">Player:</span> <span class="value" id="hud-player">0, 0</span></div>
+        <div><span class="label">Chunk:</span> <span class="value blue" id="hud-chunk">0, 0</span></div>
+        <div><span class="label">Tile:</span> <span class="value" id="hud-tile">empty (0)</span></div>
+        <div><span class="label">Passable:</span> <span class="value" id="hud-passable">—</span></div>
+        <div><span class="label">Loaded:</span> <span class="value dim" id="hud-loaded">0 chunks</span></div>
+        <div><span class="label">Scale:</span> <span class="value dim" id="hud-scale">1.00</span></div>
+        <div><span class="label">LOD:</span> <span class="value dim" id="hud-lod">0 / 5</span></div>
+        <div><span class="label">LOD canvas:</span> <span class="value dim" id="hud-lod-canvas">512×512px</span></div>
+        <div><span class="label">LOD tile:</span> <span class="value dim" id="hud-lod-tile">32px</span></div>
+      </div>
+
+      <div id="controls-hint">
+        <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> — движение<br>
+        <kbd>Scroll</kbd> — зум<br>
+        <kbd>LMB</kbd> — поставить тайл<br>
+        <kbd>RMB</kbd> — убрать тайл<br>
+        <kbd>R</kbd> — новый мир<br>
+        <kbd>1</kbd>–<kbd>7</kbd> — выбрать тайл
+      </div>
+    </div>
+
+    <div id="sidebar">
+      <div>
+        <h1>🗺️ Map Module Demo</h1>
+        <p style="margin:0; font-size:12px; color:var(--text-dim);">
+          Интерактивная демка тайлового движка
+        </p>
+      </div>
+
+      <!-- World Settings -->
+      <div class="section">
+        <h2>Мир</h2>
+
+        <label>
+          Seed
+          <div class="btn-row">
+            <input type="text" id="input-seed" value="42" style="flex:1" />
+            <button class="btn" id="btn-random-seed" title="Случайный seed">🎲</button>
+          </div>
+        </label>
+
+        <label>
+          Генератор
+          <select id="select-generator">
+            <option value="biomes">🌍 Биомы (шум)</option>
+            <option value="islands">🏝️ Острова</option>
+            <option value="dungeon">🏰 Подземелье</option>
+            <option value="checkerboard">♟️ Шахматная</option>
+            <option value="flat">🟩 Плоская</option>
+          </select>
+        </label>
+
+        <div class="btn-row">
+          <button class="btn btn-accent" id="btn-regenerate">🔄 Создать мир</button>
+        </div>
+      </div>
+
+      <!-- Chunk Settings -->
+      <div class="section">
+        <h2>Параметры чанков</h2>
+
+        <label>
+          Размер чанка
+          <div class="range-row">
+            <input type="range" id="range-chunk-size" min="8" max="32" step="8" value="16" />
+            <span class="range-value" id="val-chunk-size">16</span>
+          </div>
+        </label>
+
+        <label>
+          Размер тайла (px)
+          <div class="range-row">
+            <input type="range" id="range-tile-size" min="16" max="64" step="8" value="32" />
+            <span class="range-value" id="val-tile-size">32</span>
+          </div>
+        </label>
+
+        <label>
+          Радиус загрузки
+          <div class="range-row">
+            <input type="range" id="range-load-radius" min="1" max="20" step="1" value="3" />
+            <span class="range-value" id="val-load-radius">3</span>
+          </div>
+        </label>
+
+        <label style="flex-direction:row; align-items:center; gap:8px;">
+          <input type="checkbox" id="chk-auto-load-radius" />
+          Авто-радиус (по зуму)
+        </label>
+      </div>
+
+      <!-- Player Settings -->
+      <div class="section">
+        <h2>Игрок</h2>
+
+        <label>
+          Скорость
+          <div class="range-row">
+            <input type="range" id="range-speed" min="50" max="500" step="10" value="200" />
+            <span class="range-value" id="val-speed">200</span>
+          </div>
+        </label>
+
+        <label>
+          <input type="checkbox" id="chk-collisions" checked /> Коллизии
+        </label>
+
+        <label>
+          <input type="checkbox" id="chk-smooth-camera" checked /> Плавная камера
+        </label>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Tile Picker -->
+      <div class="section">
+        <h2>Редактор (ЛКМ / ПКМ)</h2>
+        <div class="tile-picker" id="tile-picker"></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="section">
+        <h2>Статистика</h2>
+        <div class="stats-grid">
+          <span class="stat-label">Чанков загружено</span>
+          <span class="stat-value" id="stat-loaded">0</span>
+          <span class="stat-label">Тайлов на экране</span>
+          <span class="stat-value" id="stat-tiles">0</span>
+          <span class="stat-label">Кадров отрисовано</span>
+          <span class="stat-value" id="stat-frames">0</span>
+          <span class="stat-label">Время кадра</span>
+          <span class="stat-value" id="stat-frametime">0ms</span>
+        </div>
+      </div>
+
+      <!-- Event Log -->
+      <div class="section">
+        <h2>Лог событий</h2>
+        <div id="event-log"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

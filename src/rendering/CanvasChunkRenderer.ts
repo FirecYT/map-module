@@ -76,8 +76,15 @@ export class CanvasChunkRenderer {
     const cached = this.getCachedRender(chunk, lod);
     
     if (cached) {
-      // Draw cached offscreen canvas
-      ctx.drawImage(cached.canvas, destX, destY);
+      // Draw cached offscreen canvas, stretched to the full chunk world-space size.
+      // The offscreen canvas may be smaller (for LOD), but it must fill the same
+      // world-space area. The camera transform (scale) handles screen-space sizing.
+      const chunkPixelSize = this.worldConfig.chunkSize * this.worldConfig.tileSize;
+      ctx.drawImage(
+        cached.canvas,
+        0, 0, cached.canvas.width, cached.canvas.height,
+        destX, destY, chunkPixelSize, chunkPixelSize
+      );
     } else {
       // Render directly (no caching)
       this.renderDirect(chunk, ctx, destX, destY, scale, lod);
