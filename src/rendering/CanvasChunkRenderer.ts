@@ -3,6 +3,7 @@ import type { TileId } from '../types/Tile';
 import type { TileVisual, TileVisualContext, TileVisualProvider } from '../types/Renderer';
 import type { TileRegistry } from '../core/TileRegistry';
 import type { WorldConfig } from '../types/Config';
+import { createCanvas, getCanvasContext, type CanvasType } from './CanvasFactory';
 
 /**
  * Configuration for the canvas chunk renderer.
@@ -19,13 +20,22 @@ export interface CanvasRendererConfig {
 }
 
 /**
+ * Internal cached render data.
+ */
+interface CachedRender {
+  canvas: CanvasType;
+  generation: number;
+}
+
+/**
  * Renders chunks to a Canvas 2D context with LOD support and offscreen caching.
  * 
  * Features:
- * - Offscreen canvas caching per chunk per LOD level
+ * - OffscreenCanvas/HTMLCanvasElement caching per chunk per LOD level
  * - Automatic cache invalidation when chunk generation changes
  * - Sprite sheet support
  * - Custom visual providers per tile
+ * - Framework-agnostic canvas creation (works in main thread and Web Workers)
  * 
  * @example
  * ```typescript
@@ -81,7 +91,7 @@ export class CanvasChunkRenderer {
       // world-space area. The camera transform (scale) handles screen-space sizing.
       const chunkPixelSize = this.worldConfig.chunkSize * this.worldConfig.tileSize;
       ctx.drawImage(
-        cached.canvas,
+        cached.canvas as CanvasImageSource,
         0, 0, cached.canvas.width, cached.canvas.height,
         destX, destY, chunkPixelSize, chunkPixelSize
       );
@@ -159,18 +169,21 @@ export class CanvasChunkRenderer {
     const tileRenderSize = Math.max(1, Math.floor(this.worldConfig.tileSize / Math.pow(2, lod)));
     const canvasSize = chunk.size * tileRenderSize;
 
-    // Create offscreen canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
+    // Create canvas using factory (supports OffscreenCanvas and HTMLCanvasElement)
+    const canvas = createCanvas(canvasSize, canvasSize);
+    if (!canvas) {
+      throw new Error('Failed to create canvas: no canvas support in this environment');
+    }
     
-    const ctx = canvas.getContext('2d');
+    const ctx = getCanvasContext(canvas);
     if (!ctx) {
-      throw new Error('Failed to create offscreen canvas context');
+      throw new Error('Failed to create canvas context');
     }
 
-    ctx.imageSmoothingEnabled = false;
-    this.renderTiles(chunk, ctx, tileRenderSize, lod);
+    // Type guard for context (both CanvasRenderingContext2D and OffscreenCanvasRenderingContext2D have imageSmoothingEnabled)
+    const ctx2d = ctx as CanvasRenderingContext2D;
+    ctx2d.imageSmoothingEnabled = false;
+    this.renderTiles(chunk, ctx2d, tileRenderSize, lod);
 
     return {
       canvas,
@@ -281,12 +294,4 @@ export class CanvasChunkRenderer {
       ctx.fillRect(x, y, size, size);
     }
   }
-}
-
-/**
- * Internal cached render data.
- */
-interface CachedRender {
-  canvas: HTMLCanvasElement;
-  generation: number;
 }

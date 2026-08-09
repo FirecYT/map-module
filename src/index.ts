@@ -1,5 +1,5 @@
 /**
- * @modules-js/tilemap-engine
+ * @firec/map-module
  * 
  * High-performance tile-based map engine with chunk loading, LOD rendering,
  * and procedural generation support.
@@ -65,6 +65,14 @@ export type { CanvasRendererConfig } from './rendering/CanvasChunkRenderer';
 export { LODManager, DEFAULT_LOD_CONFIG } from './rendering/LODManager';
 export { ChunkViewManager } from './rendering/ChunkViewManager';
 export type { ChunkViewManagerConfig } from './rendering/ChunkViewManager';
+export {
+  createCanvas,
+  getCanvasContext,
+  canvasToImageBitmap,
+  isOffscreenCanvas,
+  isHTMLCanvasElement,
+} from './rendering/CanvasFactory';
+export type { CanvasType, CanvasFactory } from './rendering/CanvasFactory';
 
 // Utilities
 export { TypedEventBus } from './utils/EventBus';
