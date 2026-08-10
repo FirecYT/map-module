@@ -4,7 +4,7 @@
  * Генерирует комнаты, соединённые коридорами, со стенами и полом.
  */
 import { BaseGenerator, SeededRandom } from '@firec/map-module';
-import type { Chunk } from '@firec/map-module';
+import type { Chunk, BuildContext } from '@firec/map-module';
 
 // Use IDs that don't conflict with BIOME_TILES (which go up to 10)
 const DUNGEON_TILES = {
@@ -30,8 +30,9 @@ interface Room {
 export class DungeonGenerator extends BaseGenerator {
   readonly id = 'dungeon';
 
-  protected buildChunk(chunk: Chunk, seed: number): void {
-    const rng = new SeededRandom(seed);
+  protected buildChunk(chunk: Chunk, ctx: BuildContext): void {
+    // Dungeon generation is per-chunk (discrete structures), so per-chunk seed is correct
+    const rng = new SeededRandom(ctx.seed);
 
     // Start with all walls
     chunk.fill(DUNGEON_TILES.WALL);

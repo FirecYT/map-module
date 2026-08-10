@@ -11,26 +11,26 @@ import { DEFAULT_WORLD_CONFIG } from '../src/types/Config';
 
 describe('Chunk', () => {
   it('should create a chunk with correct size', () => {
-    const chunk = new Chunk({ x: 0, y: 0, size: 16, seed: 0 });
+    const chunk = new Chunk({ x: 0, y: 0, size: 16, seed: 0, worldSeed: 0 });
     expect(chunk.size).toBe(16);
     expect(chunk.x).toBe(0);
     expect(chunk.y).toBe(0);
   });
 
   it('should get and set tiles correctly', () => {
-    const chunk = new Chunk({ x: 0, y: 0, size: 4, seed: 0 });
+    const chunk = new Chunk({ x: 0, y: 0, size: 4, seed: 0, worldSeed: 0 });
     chunk.setTile(1, 2, 5);
     expect(chunk.getTile(1, 2)).toBe(5);
   });
 
   it('should return 0 for out-of-bounds tiles', () => {
-    const chunk = new Chunk({ x: 0, y: 0, size: 4, seed: 0 });
+    const chunk = new Chunk({ x: 0, y: 0, size: 4, seed: 0, worldSeed: 0 });
     expect(chunk.getTile(-1, 0)).toBe(0);
     expect(chunk.getTile(0, 4)).toBe(0);
   });
 
   it('should fill rectangles correctly', () => {
-    const chunk = new Chunk({ x: 0, y: 0, size: 4, seed: 0 });
+    const chunk = new Chunk({ x: 0, y: 0, size: 4, seed: 0, worldSeed: 0 });
     chunk.fillRect(1, 1, 2, 2, 7);
     expect(chunk.getTile(1, 1)).toBe(7);
     expect(chunk.getTile(2, 2)).toBe(7);
@@ -38,7 +38,7 @@ describe('Chunk', () => {
   });
 
   it('should increment generation on modification', () => {
-    const chunk = new Chunk({ x: 0, y: 0, size: 4, seed: 0 });
+    const chunk = new Chunk({ x: 0, y: 0, size: 4, seed: 0, worldSeed: 0 });
     expect(chunk.generation).toBe(0);
     chunk.setTile(0, 0, 1);
     expect(chunk.generation).toBe(1);

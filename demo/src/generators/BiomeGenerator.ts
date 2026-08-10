@@ -14,7 +14,7 @@
  * Дополнительные структуры (деревья, камни) добавляются после базового рельефа.
  */
 import { BaseGenerator, ValueNoise2D, SeededRandom } from '@firec/map-module';
-import type { Chunk } from '@firec/map-module';
+import type { Chunk, BuildContext } from '@firec/map-module';
 
 export const BIOME_TILES = {
   EMPTY: 0,
@@ -33,16 +33,17 @@ export const BIOME_TILES = {
 export class BiomeGenerator extends BaseGenerator {
   readonly id = 'biomes';
 
-  protected buildChunk(chunk: Chunk, seed: number): void {
-    const heightNoise = new ValueNoise2D(seed);
-    const moistureNoise = new ValueNoise2D(seed ^ 0xDEADBEEF);
-    const detailNoise = new ValueNoise2D(seed ^ 0xCAFEBABE);
-    const rng = new SeededRandom(seed);
+  protected buildChunk(chunk: Chunk, ctx: BuildContext): void {
+    // Noise uses worldSeed + world coordinates → seamless across chunk borders
+    const heightNoise = new ValueNoise2D(ctx.worldSeed);
+    const moistureNoise = new ValueNoise2D(ctx.worldSeed ^ 0xDEADBEEF);
+    const detailNoise = new ValueNoise2D(ctx.worldSeed ^ 0xCAFEBABE);
+    // Per-chunk seed for discrete decisions (decorations)
+    const rng = new SeededRandom(ctx.seed);
 
     for (let y = 0; y < chunk.size; y++) {
       for (let x = 0; x < chunk.size; x++) {
-        const worldX = chunk.x * chunk.size + x;
-        const worldY = chunk.y * chunk.size + y;
+        const { x: worldX, y: worldY } = this.localToWorld(ctx, x, y);
 
         // Height: multi-octave noise for natural terrain
         const height = heightNoise.octave(worldX * 0.02, worldY * 0.02, 5, 0.5, 2.0);

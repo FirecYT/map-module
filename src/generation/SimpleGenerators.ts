@@ -1,5 +1,5 @@
 import type { Chunk } from '../types/Chunk';
-import { BaseGenerator } from './BaseGenerator';
+import { BaseGenerator, type BuildContext } from './BaseGenerator';
 
 /**
  * Generator that creates empty (all passable) chunks.
@@ -8,7 +8,7 @@ import { BaseGenerator } from './BaseGenerator';
 export class EmptyGenerator extends BaseGenerator {
   readonly id = 'empty';
 
-  protected buildChunk(chunk: Chunk, _seed: number): void {
+  protected buildChunk(chunk: Chunk, _ctx: BuildContext): void {
     // Fill with tile 0 (empty) - already the default, but explicit
     chunk.fill(0);
   }
@@ -30,7 +30,7 @@ export class CheckerboardGenerator extends BaseGenerator {
     this.tileB = tileB;
   }
 
-  protected buildChunk(chunk: Chunk, _seed: number): void {
+  protected buildChunk(chunk: Chunk, _ctx: BuildContext): void {
     for (let y = 0; y < chunk.size; y++) {
       for (let x = 0; x < chunk.size; x++) {
         const isEven = (x + y) % 2 === 0;

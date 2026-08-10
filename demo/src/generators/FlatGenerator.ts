@@ -2,14 +2,15 @@
  * FlatGenerator — простая плоская карта с травой.
  */
 import { BaseGenerator, SeededRandom } from '@firec/map-module';
-import type { Chunk } from '@firec/map-module';
+import type { Chunk, BuildContext } from '@firec/map-module';
 import { BIOME_TILES } from './BiomeGenerator';
 
 export class FlatGenerator extends BaseGenerator {
   readonly id = 'flat';
 
-  protected buildChunk(chunk: Chunk, seed: number): void {
-    const rng = new SeededRandom(seed);
+  protected buildChunk(chunk: Chunk, ctx: BuildContext): void {
+    // Per-chunk seed for discrete scatter (trees, flowers, rocks)
+    const rng = new SeededRandom(ctx.seed);
 
     for (let y = 0; y < chunk.size; y++) {
       for (let x = 0; x < chunk.size; x++) {

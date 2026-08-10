@@ -76,5 +76,11 @@ export interface ChunkOptions {
   x: number;
   y: number;
   size: number;
+  /** Per-chunk seed — unique for this chunk position. Use for discrete decisions
+   *  (structure placement, random counts, decorations). */
   seed: number;
+  /** World seed — same for ALL chunks. Use as the seed for noise functions
+   *  (ValueNoise2D, etc.) and sample with WORLD coordinates to ensure
+   *  seamless continuity across chunk boundaries. */
+  worldSeed: number;
 }

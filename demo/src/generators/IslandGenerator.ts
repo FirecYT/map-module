@@ -5,20 +5,21 @@
  * в океане. Каждый чанк может быть частью острова или океаном.
  */
 import { BaseGenerator, ValueNoise2D, SeededRandom } from '@firec/map-module';
-import type { Chunk } from '@firec/map-module';
+import type { Chunk, BuildContext } from '@firec/map-module';
 import { BIOME_TILES } from './BiomeGenerator';
 
 export class IslandGenerator extends BaseGenerator {
   readonly id = 'islands';
 
-  protected buildChunk(chunk: Chunk, seed: number): void {
-    const noise = new ValueNoise2D(seed);
-    const rng = new SeededRandom(seed);
+  protected buildChunk(chunk: Chunk, ctx: BuildContext): void {
+    // Noise uses worldSeed + world coordinates → seamless across chunk borders
+    const noise = new ValueNoise2D(ctx.worldSeed);
+    // Per-chunk seed for discrete decisions (decorations)
+    const rng = new SeededRandom(ctx.seed);
 
     for (let y = 0; y < chunk.size; y++) {
       for (let x = 0; x < chunk.size; x++) {
-        const worldX = chunk.x * chunk.size + x;
-        const worldY = chunk.y * chunk.size + y;
+        const { x: worldX, y: worldY } = this.localToWorld(ctx, x, y);
 
         // Island function: creates blobs of land
         const islandNoise = noise.octave(worldX * 0.008, worldY * 0.008, 4, 0.5, 2.0);

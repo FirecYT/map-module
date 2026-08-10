@@ -28,6 +28,7 @@ import {
   IslandGenerator,
   DungeonGenerator,
   FlatGenerator,
+  WorldWithVillagesGenerator,
   BIOME_TILES,
   DUNGEON_TILES,
 } from './generators';
@@ -293,12 +294,13 @@ function createWorld(): void {
   world.registerGenerator(new IslandGenerator());
   world.registerGenerator(new DungeonGenerator());
   world.registerGenerator(new FlatGenerator());
+  world.registerGenerator(new WorldWithVillagesGenerator());
   world.registerGenerator(new CheckerboardGenerator(4, 5)); // Uses grass/forest for visual clarity
 
   // Set active generator based on selection
   const genId = state.currentGenerator;
   // Unregister all except the selected one
-  for (const id of ['biomes', 'islands', 'dungeon', 'flat', 'checkerboard']) {
+  for (const id of ['biomes', 'islands', 'dungeon', 'flat', 'checkerboard', 'world-with-villages']) {
     if (id !== genId) {
       world.unregisterGenerator(id);
     }

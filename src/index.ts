@@ -56,6 +56,7 @@ export type {
 
 // Generation
 export { BaseGenerator } from './generation/BaseGenerator';
+export type { BuildContext } from './generation/BaseGenerator';
 export { EmptyGenerator, CheckerboardGenerator } from './generation/SimpleGenerators';
 export { ValueNoise2D, createNoise2D } from './generation/noise/ValueNoise2D';
 

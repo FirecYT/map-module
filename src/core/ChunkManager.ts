@@ -129,6 +129,7 @@ export class ChunkManager {
       y: chunkY,
       size: this.config.chunkSize,
       seed,
+      worldSeed: this.baseSeed,
     });
 
     this.chunks.set(key, chunk);
