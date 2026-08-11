@@ -25,6 +25,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "lint": "echo 'eslint not installed, skipping lint'",
+    "prepare": "npm run build",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
