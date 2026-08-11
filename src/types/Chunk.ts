@@ -67,6 +67,11 @@ export interface Chunk {
    * Checks if the chunk has been modified since last render.
    */
   isDirty(): boolean;
+  
+  /**
+   * Clears the dirty flag. Call this after the chunk has been rendered.
+   */
+  clearDirty(): void;
 }
 
 /**

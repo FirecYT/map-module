@@ -158,9 +158,7 @@ export class CanvasChunkRenderer {
     lodCache.set(lod, render);
     
     // Clear dirty flag after rendering
-    if ('clearDirty' in chunk && typeof (chunk as { clearDirty: () => void }).clearDirty === 'function') {
-      (chunk as { clearDirty: () => void }).clearDirty();
-    }
+    chunk.clearDirty();
     
     return render;
   }
@@ -196,12 +194,12 @@ export class CanvasChunkRenderer {
     ctx: CanvasRenderingContext2D,
     destX: number,
     destY: number,
-    scale: number,
+    _scale: number,
     lod: number
   ): void {
     const tileRenderSize = Math.max(
       1,
-      Math.floor(this.worldConfig.tileSize * scale / Math.pow(2, lod))
+      Math.floor(this.worldConfig.tileSize / Math.pow(2, lod))
     );
 
     ctx.save();

@@ -252,6 +252,11 @@ export class World {
     endY: number,
     stepSize: number = 4
   ): boolean {
+    // Check start point
+    if (!this.isPassable(startX, startY)) {
+      return false;
+    }
+
     const dx = endX - startX;
     const dy = endY - startY;
     const distance = Math.hypot(dx, dy);
